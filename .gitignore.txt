@@ -1,0 +1,27 @@
+# Angular
+node_modules/
+dist/
+
+# Java
+target/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Capacitor / Android
+android/.gradle/
+android/app/build/
+
+# Env
+.env
