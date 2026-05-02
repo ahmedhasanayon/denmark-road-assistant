@@ -1,3 +1,36 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+import { authGuard } from './auth.guard';
+import { LoginPageComponent } from './login.page';
+import { ProfilePageComponent } from './profile.page';
+import { RouteAnalysisPageComponent } from './route-analysis.page';
+import { SignupPageComponent } from './signup.page';
+
+export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'analysis'
+  },
+  {
+    path: 'analysis',
+    component: RouteAnalysisPageComponent
+  },
+  {
+    path: 'login',
+    component: LoginPageComponent
+  },
+  {
+    path: 'signup',
+    component: SignupPageComponent
+  },
+  {
+    path: 'profile',
+    component: ProfilePageComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: '**',
+    redirectTo: 'analysis'
+  }
+];

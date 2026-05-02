@@ -8,6 +8,8 @@ public record AppProperties(
         String mlServiceBaseUrl,
         double denmarkCenterLat,
         double denmarkCenterLng,
-        String countryCode
+        String countryCode,
+        String jwtSecret,
+        long jwtExpirationMs
 ) {
 }
