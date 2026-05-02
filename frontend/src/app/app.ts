@@ -106,7 +106,7 @@ interface RiskSignal {
 export class App implements AfterViewInit {
   private readonly http = inject(HttpClient);
   private readonly weatherService = inject(WeatherService);
-  private readonly apiBase = `${environment.apiBaseUrl}/api`;
+  private readonly apiBaseUrl = signal(environment.apiBaseUrl);
 
   @ViewChild('mapContainer', { static: true })
   private readonly mapContainer?: ElementRef<HTMLDivElement>;
@@ -148,7 +148,7 @@ export class App implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initializeMap();
-    void this.loadModelInfo();
+    void this.initializeBackendConnection();
     this.updateNavbarState();
   }
 
@@ -164,7 +164,7 @@ export class App implements AfterViewInit {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<RouteAnalysisResponse>(`${this.apiBase}/route-and-predict`, {
+        this.http.post<RouteAnalysisResponse>(this.apiUrl('/route-and-predict'), {
           origin: this.origin().trim(),
           destination: this.destination().trim(),
           selectedDepartureTime: this.selectedDepartureTime()
@@ -207,7 +207,7 @@ export class App implements AfterViewInit {
     this.retraining.set(true);
 
     try {
-      const info = await firstValueFrom(this.http.post<ModelInfo>(`${this.apiBase}/retrain-model`, {}));
+      const info = await firstValueFrom(this.http.post<ModelInfo>(this.apiUrl('/retrain-model'), {}));
       this.modelInfo.set(info);
       this.statusMessage.set('Synthetic model retrained successfully.');
     } catch (error) {
@@ -378,15 +378,34 @@ export class App implements AfterViewInit {
     this.statusMessage.set('Map ready. Analyze a Denmark route to see the synthetic advisory.');
   }
 
-  private async loadModelInfo(): Promise<void> {
+  private async initializeBackendConnection(): Promise<void> {
     try {
-      const info = await firstValueFrom(this.http.get<ModelInfo>(`${this.apiBase}/model-info`));
-      this.modelInfo.set(info);
+      await this.loadModelInfo();
     } catch {
       this.errorMessage.set(
-        'Model info is unavailable right now. Make sure the Spring Boot backend and Python ml-service are both running.'
+        'Backend discovery failed. The emulator uses 10.0.2.2 for your PC, while a real phone uses 192.168.1.103 over WiFi. Make sure the backend and ML service are running.'
       );
     }
+  }
+
+  private async loadModelInfo(): Promise<void> {
+    const candidates = environment.apiBaseCandidates ?? [environment.apiBaseUrl];
+    let lastError: unknown;
+
+    for (const candidate of candidates) {
+      try {
+        const info = await firstValueFrom(this.http.get<ModelInfo>(`${candidate}/api/model-info`));
+        this.apiBaseUrl.set(candidate);
+        this.modelInfo.set(info);
+        this.errorMessage.set('');
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    this.modelInfo.set(null);
+    throw lastError;
   }
 
   private drawRoute(route: RouteInfo): void {
@@ -452,6 +471,10 @@ export class App implements AfterViewInit {
 
   private updateNavbarState(): void {
     this.navbarExpanded.set(window.scrollY > 20);
+  }
+
+  private apiUrl(path: string): string {
+    return `${this.apiBaseUrl()}/api${path}`;
   }
 
   private async loadWeather(route: RouteInfo): Promise<void> {
