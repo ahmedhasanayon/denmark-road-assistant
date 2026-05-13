@@ -5,7 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import * as L from 'leaflet';
 
+import { AuthService } from './auth.service';
 import { BackendUrlService } from './backend-url.service';
+import { FeedbackCardComponent } from './feedback-card.component';
+import { FeedbackResponse } from './history.service';
 import { LocationService } from './location.service';
 import { WeatherWidgetComponent } from './weather-widget.component';
 import { WeatherHour, WeatherService } from './weather.service';
@@ -65,6 +68,7 @@ interface RouteAnalysisResponse {
   route: RouteInfo;
   features: RouteFeatures;
   prediction: Prediction;
+  historyId: number | null;
   syntheticDemo: boolean;
   disclaimer: string;
 }
@@ -101,12 +105,13 @@ interface RiskSignal {
 
 @Component({
   selector: 'app-route-analysis-page',
-  imports: [CommonModule, FormsModule, WeatherWidgetComponent],
+  imports: [CommonModule, FormsModule, WeatherWidgetComponent, FeedbackCardComponent],
   templateUrl: './route-analysis.page.html',
   styleUrl: './route-analysis.page.css'
 })
 export class RouteAnalysisPageComponent implements AfterViewInit {
   private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
   private readonly backendUrlService = inject(BackendUrlService);
   private readonly locationService = inject(LocationService);
   private readonly weatherService = inject(WeatherService);
@@ -128,8 +133,10 @@ export class RouteAnalysisPageComponent implements AfterViewInit {
   protected readonly locationMessage = signal('');
   protected readonly statusMessage = signal('Preparing Denmark map...');
   protected readonly analysis = signal<RouteAnalysisResponse | null>(null);
+  protected readonly latestFeedback = signal<FeedbackResponse | null>(null);
   protected readonly modelInfo = signal<ModelInfo | null>(null);
   protected readonly advisoryHistory = signal<AdvisoryHistoryItem[]>([]);
+  protected readonly isLoggedIn = computed(() => this.authService.isLoggedIn());
   protected readonly sampleRoutes: SampleRoute[] = [
     { origin: 'Copenhagen', destination: 'Roskilde' },
     { origin: 'Odense', destination: 'Aarhus' },
@@ -172,6 +179,7 @@ export class RouteAnalysisPageComponent implements AfterViewInit {
       );
 
       this.analysis.set(response);
+      this.latestFeedback.set(null);
       this.drawRoute(response.route);
       await this.loadWeather(response.route);
       this.statusMessage.set('Synthetic advisory ready.');
@@ -193,6 +201,7 @@ export class RouteAnalysisPageComponent implements AfterViewInit {
     } catch (error) {
       this.clearRoute();
       this.analysis.set(null);
+      this.latestFeedback.set(null);
       this.weatherHours.set([]);
       this.weatherError.set('');
       this.statusMessage.set('No synthetic advisory available yet.');
@@ -270,10 +279,6 @@ export class RouteAnalysisPageComponent implements AfterViewInit {
 
   protected confidencePercent(confidence: number | undefined): number {
     return Math.round((confidence ?? 0) * 100);
-  }
-
-  protected formatProbability(probability: number): string {
-    return `${Math.round(probability * 100)}%`;
   }
 
   protected routeLabel(): string {

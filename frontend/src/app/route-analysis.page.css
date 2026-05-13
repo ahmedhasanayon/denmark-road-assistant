@@ -709,6 +709,21 @@ p {
   font-size: 0.88rem;
 }
 
+.auth-note-card {
+  padding: 20px 22px;
+}
+
+.auth-note-card h2 {
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-size: 1.05rem;
+}
+
+.auth-note-card p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 .risks-card h2,
 .inputs-card h2 {
   margin-bottom: 14px;

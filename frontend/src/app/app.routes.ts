@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from './auth.guard';
+import { HistoryPageComponent } from './history.page';
 import { LoginPageComponent } from './login.page';
 import { ProfilePageComponent } from './profile.page';
 import { RouteAnalysisPageComponent } from './route-analysis.page';
@@ -27,6 +28,11 @@ export const routes: Routes = [
   {
     path: 'profile',
     component: ProfilePageComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'history',
+    component: HistoryPageComponent,
     canActivate: [authGuard]
   },
   {

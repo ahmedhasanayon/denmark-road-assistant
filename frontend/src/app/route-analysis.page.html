@@ -16,9 +16,7 @@
 
   <section class="dashboard-grid">
     <div class="left-column">
-
       <section class="card route-card">
-
         <div class="route-card-head">
           <div class="route-input-labels">
             <span>Origin</span>
@@ -33,8 +31,6 @@
         <div class="route-input-stack">
           <div class="route-field-stack">
             <div style="position: relative; display: flex; flex-direction: column; gap: 12px; padding: 10px 0;">
-
-              <!-- Origin -->
               <input
                 type="text"
                 [ngModel]="origin()"
@@ -43,37 +39,31 @@
                 style="width: 100%; height: 46px; padding: 0 16px; border-radius: 16px; border: 1px solid #ddd; background: #fff; z-index: 1; position: relative;"
               />
 
-              <!-- Swap Button -->
               <button
                 type="button"
                 (click)="swapRoute()"
                 aria-label="Swap origin and destination"
                 style="
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 9999;
-
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-
-      border: 1px solid #ddd;
-      background: white;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      cursor: pointer;
-    "
+                  position: absolute;
+                  left: 50%;
+                  top: 50%;
+                  transform: translate(-50%, -50%);
+                  z-index: 9999;
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  border: 1px solid #ddd;
+                  background: white;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+                  cursor: pointer;
+                "
               >
                 &#8646;
               </button>
 
-              <!-- Destination -->
               <input
                 type="text"
                 [ngModel]="destination()"
@@ -81,7 +71,6 @@
                 placeholder="Copenhagen"
                 style="width: 100%; height: 46px; padding: 0 16px; border-radius: 16px; border: 1px solid #ddd; background: #fff; z-index: 1; position: relative;"
               />
-
             </div>
 
             <div class="time-field">
@@ -94,7 +83,6 @@
                 name="departureTime"
                 step="900"
               />
-
             </div>
 
             <div class="location-actions">
@@ -104,11 +92,11 @@
                 [disabled]="locating()"
                 (click)="useMyLocation()"
               >
-                {{ locating() ? 'Getting location...' : '📍 Use My Location' }}
+                {{ locating() ? 'Getting location...' : 'Use My Location' }}
               </button>
               <p class="location-help">
                 Browser and Android app use the device Geolocation API. In the Android emulator, set GPS manually from
-                Extended Controls → Location.
+                Extended Controls to Location.
               </p>
               @if (locationMessage()) {
                 <p class="location-success">{{ locationMessage() }}</p>
@@ -120,8 +108,6 @@
         <button type="button" class="analyze-button" [disabled]="!canAnalyze()" (click)="analyzeRoute()">
           {{ analyzing() ? 'Analyzing Route...' : 'Analyze Route' }}
         </button>
-
-
       </section>
 
       <section class="card map-card">
@@ -261,6 +247,23 @@
           </p>
         }
       </section>
+
+      @if (analysis(); as result) {
+        @if (isLoggedIn() && result.historyId) {
+          <app-feedback-card
+            [loggedIn]="true"
+            [historyId]="result.historyId"
+            [existingFeedback]="latestFeedback()"
+            title="Was this advisory helpful?"
+            (saved)="latestFeedback.set($event)"
+          />
+        } @else if (!isLoggedIn()) {
+          <section class="card auth-note-card">
+            <h2>Save this result</h2>
+            <p>Log in to save this analysis to your history and give feedback on the advisory.</p>
+          </section>
+        }
+      }
     </aside>
   </section>
 </main>

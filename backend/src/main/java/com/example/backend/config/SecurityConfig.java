@@ -55,6 +55,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/model-info").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/route", "/api/predict", "/api/route-and-predict", "/api/retrain-model").permitAll()
+                        .requestMatchers("/api/history/**").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().permitAll()
                 )
